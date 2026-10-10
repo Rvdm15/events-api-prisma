@@ -1,3 +1,5 @@
+/*
+// OUDE CODE VÓÓR PRISMA 
 import fs from "fs";
 import { v4 as uuid } from "uuid";
 
@@ -48,5 +50,47 @@ export const deleteCategoryById = (id) => {
     return null;
   }
   categoriesData.categories.splice(index, 1);
+  return id;
+};
+*/
+
+import { PrismaClient } from "@prisma/client";
+
+// Verbinding met de database (één keer per bestand)
+const prisma = new PrismaClient();
+
+// Alle categories ophalen
+export const getCategories = async () => {
+  return await prisma.category.findMany();
+};
+
+// Eén category ophalen op id
+export const getCategoryById = async (id) => {
+  return await prisma.category.findUnique({ where: { id } });
+};
+
+// Nieuwe category toevoegen
+export const createCategory = async (newCategory) => {
+  return await prisma.category.create({ data: newCategory });
+};
+
+// Category wijzigen
+export const updateCategoryById = async (id, updatedData) => {
+  // Eerst checken of de category bestaat
+  const category = await prisma.category.findUnique({ where: { id } });
+  if (!category) {
+    return null;
+  }
+  return await prisma.category.update({ where: { id }, data: updatedData });
+};
+
+// Category verwijderen
+export const deleteCategoryById = async (id) => {
+  // Eerst checken of de category bestaat
+  const category = await prisma.category.findUnique({ where: { id } });
+  if (!category) {
+    return null;
+  }
+  await prisma.category.delete({ where: { id } });
   return id;
 };
