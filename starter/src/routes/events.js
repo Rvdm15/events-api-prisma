@@ -11,6 +11,80 @@ import authMiddleware from "../middleware/auth.js";
 const router = express.Router();
 
 // Alle events ophalen, evt met zoekterm
+router.get("/", async (req, res, next) => {
+  try {
+    const { title } = req.query;
+    const events = await getEvents(title);
+    res.json(events);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Eén event ophalen
+
+// Eén event ophalen
+router.get("/:id", async (req, res, next) => {
+  try {
+    const event = await getEventById(req.params.id);
+    if (!event) {
+      res.status(404).json({
+        message: "Event not found",
+      });
+    } else {
+      res.json(event);
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Nieuwe event toevoegen
+router.post("/", authMiddleware, async (req, res, next) => {
+  try {
+    const newEvent = await createEvent(req.body);
+    res.status(201).json(newEvent);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Event wijzigen
+router.put("/:id", authMiddleware, async (req, res, next) => {
+  try {
+    const event = await updateEventById(req.params.id, req.body);
+    if (!event) {
+      res.status(404).json({
+        message: "Event not found",
+      });
+    } else {
+      res.json({ message: "Event updated", ...event });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Event verwijderen
+router.delete("/:id", authMiddleware, async (req, res, next) => {
+  try {
+    const id = await deleteEventById(req.params.id);
+    if (!id) {
+      res.status(404).json({
+        message: "Event not found",
+      });
+    } else {
+      res.json({ message: "Event deleted" });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+export default router;
+
+/*
+// Alle events ophalen, evt met zoekterm
 router.get("/", (req, res) => {
   const { title } = req.query;
   const events = getEvents(title);
@@ -60,3 +134,4 @@ router.delete("/:id", authMiddleware, (req, res) => {
 });
 
 export default router;
+*/
