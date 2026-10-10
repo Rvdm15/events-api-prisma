@@ -6,3 +6,34 @@ datasource db {
     provider = "sqlite"
     url      = env("DATABASE_URL")
 }
+
+model User {
+    id       String  @id @default(uuid())
+    username String  @unique
+    password String
+    name     String
+    image    String
+    events   Event[]
+}
+
+model Category {
+    id     String  @id @default(uuid())
+    name   String
+    events Event[]
+}
+
+model Event {
+    id          String   @id @default(uuid())
+    title       String
+    description String
+    image       String
+    location    String
+    startTime   DateTime
+    endTime     DateTime
+    // Aangepast tov Winc: kolom heet createdBy (zoals in JSON) i.p.v. userId
+    createdBy   String
+
+    categories Category[]
+    // Koppeling naar de User die het event maakte (in Winc heet dit veld createdBy)
+    user       User       @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+}
