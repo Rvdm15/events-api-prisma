@@ -3,16 +3,28 @@ import { PrismaClient } from "@prisma/client";
 // Verbinding met de database (één keer per bestand)
 const prisma = new PrismaClient();
 
+// Hulpfunctie: zet de categories om naar een lijstje met id's
+const withCategoryIds = (event) => {
+  const { categories, ...rest } = event;
+  return { ...rest, categoryIds: categories.map((category) => category.id) };
+};
+
 // Alle events ophalen (eventueel gefilterd op title)
 export const getEvents = async (title) => {
-  return await prisma.event.findMany({
+  const events = await prisma.event.findMany({
     where: { title: { contains: title } },
+    include: { categories: true },
   });
+  return events.map(withCategoryIds);
 };
 
 // Eén event ophalen op id
 export const getEventById = async (id) => {
-  return await prisma.event.findUnique({ where: { id } });
+  const event = await prisma.event.findUnique({
+    where: { id },
+    include: { categories: true },
+  });
+  return event ? withCategoryIds(event) : null;
 };
 
 // Nieuwe event toevoegen
@@ -20,15 +32,18 @@ export const createEvent = async (newEvent) => {
   // categoryIds apart halen, de rest (title, createdBy, enz.) blijft in eventData
   const { categoryIds, ...eventData } = newEvent;
 
-  return await prisma.event.create({
+  const event = await prisma.event.create({
     data: {
       ...eventData,
-      // Koppel de categorieën via hun id's (alleen als ze zijn meegestuurd)
+
+      // Koppel de categories via hun id's (alleen als ze zijn meegestuurd)
       categories: categoryIds
         ? { connect: categoryIds.map((id) => ({ id })) }
         : undefined,
     },
+    include: { categories: true },
   });
+  return withCategoryIds(event);
 };
 
 // Event wijzigen
@@ -42,7 +57,7 @@ export const updateEventById = async (id, updatedData) => {
   // categoryIds apart halen, de rest blijft in eventData
   const { categoryIds, ...eventData } = updatedData;
 
-  return await prisma.event.update({
+  const updatedEvent = await prisma.event.update({
     where: { id },
     data: {
       ...eventData,
@@ -51,7 +66,9 @@ export const updateEventById = async (id, updatedData) => {
         ? { set: categoryIds.map((id) => ({ id })) }
         : undefined,
     },
+    include: { categories: true },
   });
+  return withCategoryIds(updatedEvent);
 };
 
 // Event verwijderen
