@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import * as Sentry from "@sentry/node";
 import dotenv from "dotenv";
 import categoriesRouter from "./routes/categories.js";
@@ -13,6 +14,7 @@ Sentry.init({
 });
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 const logMiddleware = (req, res, next) => {
